@@ -1,0 +1,566 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: radial-gradient(circle at top, #141414, #0a0a0a);
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+
+header {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(90deg, #ff416c, #ff4b2b);
+  box-shadow: 0 0 25px rgba(255, 75, 43, 0.4);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+header .logo {
+  width: 100%; 
+  max-width: 1000px;
+  height: auto;
+  margin-bottom: 0.5rem;
+  filter: drop-shadow(0 0 10px rgba(255, 75, 43, 0.6));
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { filter: drop-shadow(0 0 6px rgba(255, 75, 43, 0.4)); }
+  to { filter: drop-shadow(0 0 18px rgba(255, 75, 43, 0.8)); }
+}
+
+header p {
+  font-size: 1.2rem;
+  color: #fff;
+  opacity: 0.9;
+}
+
+
+main {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.movie-selection {
+  max-width: 1100px;
+  text-align: center;
+}
+
+.movie-selection h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #ff6f61;
+}
+
+.movie-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.movie-card {
+  background: #1b1b1f;
+  border-radius: 15px;
+  overflow: hidden;
+  text-align: center;
+  width: 220px;
+  transition: transform 0.3s;
+  box-shadow: 0 0 15px rgba(255, 75, 43, 0.2);
+}
+
+.movie-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(255, 75, 43, 0.4);
+}
+
+.movie-card img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-bottom: 3px solid #ff4b2b;
+}
+
+.movie-card h3 {
+  margin: 1rem 0 0.5rem;
+}
+
+.buy-btn {
+  background: linear-gradient(90deg, #ff416c, #ff4b2b);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: 0.3s;
+}
+
+.buy-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+
+.checkout-section {
+  text-align: center;
+  background: #1a1a1d;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 700px;
+  box-shadow: 0 0 20px rgba(255, 75, 43, 0.3);
+}
+
+.checkout-section h2 {
+  color: #ff6f61;
+  font-size: 2rem;
+}
+
+.checkout-section select,
+.checkout-section input {
+  width: 80%;
+  padding: 0.7rem;
+  margin: 0.5rem 0 1.2rem;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+  background: #222;
+  color: #fff;
+}
+
+button {
+  display: block;
+  margin: 40px auto 20px auto; 
+  padding: 18px 50px;         
+  font-size: 1.2rem;          
+  font-weight: 700;
+  background: linear-gradient(90deg, #ff4b2b, #ff416c); 
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 18px rgba(255, 75, 43, 0.4);
+}
+
+button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 22px rgba(255, 75, 43, 0.6);
+  background: linear-gradient(90deg, #ff6347, #ff4b2b);
+}
+
+.seats {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 10px;
+  justify-content: center;
+  margin: 1.5rem auto;
+}
+
+.seat {
+  width: 34px;
+  height: 34px;
+  background: #333;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.seat:hover {
+  background: #ff6f61;
+}
+
+.seat.selected {
+  background: #ff4b2b;
+}
+
+.seat.occupied {
+  background: #555;
+  cursor: not-allowed;
+}
+
+.summary-box {
+  background: #1b1b1f;
+  border-radius: 10px;
+  margin-top: 1.8rem;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  width: 80%;
+  margin-inline: auto;
+  box-shadow: 0 0 15px rgba(255, 75, 43, 0.2);
+  color: #eee;
+}
+
+footer {
+  text-align: center;
+  padding: 1.5rem;
+  background: #111;
+  color: #aaa;
+  font-size: 0.9rem;
+  margin-top: 2rem;
+  border-top: 1px solid #222;
+  width: 100%;
+}
+
+/* ==== NOVO ESTILO PARA SNACKS ==== */
+
+.snack-section {
+  background: #1b1b1f;
+  border-radius: 15px;
+  padding: 25px;
+  margin: 25px auto;
+  box-shadow: 0 0 20px rgba(255, 75, 43, 0.3);
+  color: #fff;
+  width: 90%;
+  max-width: 800px;
+}
+
+.snack-section h3 {
+  color: #ff6f61;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.6rem;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.item {
+  background: #2a2a2a;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  transition: 0.3s ease;
+  box-shadow: 0 0 10px rgba(255, 75, 43, 0.1);
+}
+
+.item:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(255, 75, 43, 0.3);
+}
+
+.info {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+.price {
+  color: #ffb800;
+  font-weight: 600;
+}
+
+.controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.controls button {
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  border: none;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s ease;
+  box-shadow: 0 3px 10px rgba(255, 75, 43, 0.3);
+}
+
+.controls button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 75, 43, 0.5);
+}
+
+
+.controls .quantity {
+  margin: 0 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.extra {
+  margin-top: 12px;
+  background: #222;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.extra label {
+  font-size: 0.9rem;
+  color: #eee;
+}
+
+.extra select {
+  margin-left: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  background: #333;
+  color: #fff;
+}
+
+.extra-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.extra-field-wrapper {
+  background: #2a2a2a;
+  padding: 8px;
+  border-radius: 6px;
+  border-left: 3px solid #ff4b2b;
+}
+
+.extra-field-wrapper label {
+  display: block;
+  font-size: 0.85rem;
+  color: #fff;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.extra-select {
+  width: 100% !important;
+  padding: 6px 8px !important;
+  border-radius: 4px !important;
+  border: 1px solid #444 !important;
+  background-color: #333 !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.extra-select:hover {
+  border-color: #ff4b2b !important;
+  box-shadow: 0 0 6px rgba(255, 75, 43, 0.2) !important;
+}
+
+.extra-select:focus {
+  outline: none !important;
+  border-color: #ff4b2b !important;
+  box-shadow: 0 0 8px rgba(255, 75, 43, 0.3) !important;
+}
+
+.hidden {
+  display: none;
+}
+
+.checkout-section label {
+  display: block;
+  text-align: left;
+  margin: 10px auto 5px;
+  font-weight: 600;
+  color: #ffffff;
+  width: 80%;
+}
+
+.checkout-section input[type="text"],
+.checkout-section input[type="email"] {
+  width: 80%;
+  padding: 0.7rem;
+  margin-bottom: 1rem;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+  background: #222;
+  color: #fff;
+  font-size: 1rem;
+  transition: 0.3s ease;
+}
+
+.checkout-section input:focus {
+  background: #2e2e2e;
+  box-shadow: 0 0 8px rgba(255, 75, 43, 0.5);
+}
+
+.session-type {
+  background-color: #222;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.7rem;
+  border: none;
+  width: 80%;
+  margin-bottom: 1rem;
+}
+
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+  align-items: center;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff4b2b;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 10px 15px;
+  width: 45%;              
+  max-width: 380px;       
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(255, 75, 43, 0.3);
+}
+
+.payment-option:hover {
+  background: #ff6347;
+  transform: scale(1.03);
+  box-shadow: 0 4px 15px rgba(255, 75, 43, 0.3);
+}
+
+.payment-option input[type="radio"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid white;
+  border-radius: 50%;
+  position: relative;
+  margin-right: 15px;
+  cursor: pointer;
+  outline: none;
+  transition: 0.3s;
+}
+
+.payment-option input[type="radio"]:checked {
+  background-color: white;
+}
+
+.payment-option input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  background: #ff4b2b;
+  border-radius: 50%;
+}
+
+.payment-option span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+  font-size: 1.3rem;
+}
+
+.payment-icon {
+  font-size: 1.4rem;
+  margin-left: 10px;
+}
+
+/* === ESTILOS PARA SELEÇÃO DE TIPOS DE INGRESSO === */
+.ticket-selection-container {
+  background: #1b1b1f;
+  border-radius: 15px;
+  padding: 25px;
+  margin: 25px auto;
+  box-shadow: 0 0 20px rgba(255, 75, 43, 0.3);
+  color: #fff;
+  width: 90%;
+  max-width: 800px;
+}
+
+.ticket-selection-container.hidden {
+  display: none;
+}
+
+.ticket-selection-container h3 {
+  color: #ff6f61;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.6rem;
+  text-align: center;
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+#ticket-selection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#ticket-selection-list > div {
+  background: #2a2a2a;
+  padding: 15px;
+  border-radius: 12px;
+  transition: 0.3s ease;
+  box-shadow: 0 0 10px rgba(255, 75, 43, 0.1);
+}
+
+#ticket-selection-list > div:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(255, 75, 43, 0.3);
+}
+
+#ticket-selection-list label {
+  display: block;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.8rem;
+  font-size: 1rem;
+}
+
+.ticket-type-select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background-color: #333;
+  color: #fff;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ticket-type-select:hover {
+  border-color: #ff4b2b;
+  box-shadow: 0 0 8px rgba(255, 75, 43, 0.3);
+}
+
+.ticket-type-select:focus {
+  outline: none;
+  border-color: #ff4b2b;
+  box-shadow: 0 0 12px rgba(255, 75, 43, 0.4);
+}
+
+.ticket-type-select option {
+  background: #333;
+  color: #fff;
+  padding: 0.5rem;
+}
