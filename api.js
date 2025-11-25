@@ -13,7 +13,8 @@
    Substitua "http://localhost:3000/..."
    pela URL real do seu endpoint Node.js quando souber.
 */
-const API_URL = "http://localhost:3000/cliente";
+// Endpoint correto para enviar um pedido/venda ao back-end
+const API_URL = "http://localhost:3000/venda";
 const API_Filme = "http://localhost:3000/filme";
 const API_Sala = "http://localhost:3000/sala";
 const API_Sessao = "http://localhost:3000/sessao";

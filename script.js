@@ -42,10 +42,21 @@ buyButtons.forEach(btn => {
         const resposta = await fetch(API_Sessao, { method: "GET" });
         if (resposta.ok) {
           const data = await resposta.json();
-          sessaoIdGlobal = data.sessaoId; // armazena o ID gerado pelo servidor
-          localStorage.setItem("sessaoId", sessaoIdGlobal);
-          console.log("✅ SessãoId gerado pelo servidor:", sessaoIdGlobal);
-          return sessaoIdGlobal;
+          // O back-end retorna um array de sessões (ou um objeto). Aceitamos ambos:
+          if (Array.isArray(data) && data.length > 0) {
+            // tenta usar um campo numérico que identifique a sessão (ex: cd_sessao)
+            sessaoIdGlobal = data[0].cd_sessao ?? data[0].id ?? data[0].sessaoId;
+          } else if (data && (data.sessaoId || data.cd_sessao || data.id)) {
+            sessaoIdGlobal = data.sessaoId ?? data.cd_sessao ?? data.id;
+          }
+
+          if (sessaoIdGlobal) {
+            localStorage.setItem("sessaoId", sessaoIdGlobal);
+            console.log("✅ SessãoId obtido do servidor:", sessaoIdGlobal);
+            return sessaoIdGlobal;
+          }
+
+          // se o servidor não forneceu um id utilizável, cairá no fallback abaixo
         } else {
           console.warn("⚠️ Erro ao gerar sessaoId");
           // fallback: gera um ID local (UUID simples)
@@ -82,7 +93,14 @@ buyButtons.forEach(btn => {
         const resposta = await fetch(url);
         if (resposta.ok) {
           const data = await resposta.json();
-          const assentosOcupados = data.assentos || []; // esperado: ["A1", "B2", "C3", ...]
+          // o backend pode retornar uma lista de objetos { numero_assento: 'A1', ... }
+          // ou um objeto { assentos: ['A1', ...] } — aceitamos ambos
+          let assentosOcupados = [];
+          if (Array.isArray(data)) {
+            assentosOcupados = data.map(a => a.numero_assento ?? a.assento ?? a);
+          } else if (Array.isArray(data.assentos)) {
+            assentosOcupados = data.assentos;
+          }
 
           // marca cada assento como ocupado
           assentosOcupados.forEach(id => {
