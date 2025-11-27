@@ -29,7 +29,7 @@ const API_Assento = `${API_URL}/assento`;
 async function enviarPedido(dadosCompra) {
   try {
     // Envia o pedido como JSON
-    const resposta = await fetch(API_URL, {
+    const resposta = await fetch(API_Venda, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
