@@ -125,10 +125,10 @@ function mapTipoSessao(tipoSessao) {
         sessoesFiltradasPorFilmeESala.forEach(sessao => {
           const option = document.createElement("option");
           option.value = sessao.cd_sessao; // ID numérico real
-          // Formata e mostra "Sessão" + horário do banco de dados
+          // Formata e mostra apenas o horário do banco de dados
           const dataHora = new Date(sessao.data_hora);
           const horario = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-          option.textContent = `Sessão ${horario}`;
+          option.textContent = horario;
           showtimeSelect.appendChild(option);
         });
 
