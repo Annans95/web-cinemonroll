@@ -119,34 +119,31 @@ async function enviarPedido(dadosCompra) {
     // 5️⃣ Criar ingressos (um para cada assento)
     const valorPorAssento = dadosCompra.total / dadosCompra.quantidadeAssentos;
     
-    for (let i = 0; i < dadosCompra.assentos.length; i++) {
-      const assentoId = dadosCompra.assentos[i];
-      // Pega o tipo de ingresso específico deste assento (se houver array de tipos)
-      const tipoIngresso = dadosCompra.tiposIngresso && dadosCompra.tiposIngresso[i] 
-        ? dadosCompra.tiposIngresso[i] 
-        : "inteira";
+   for (let i = 0; i < dadosCompra.assentos.length; i++) {
+    const assentoId = dadosCompra.assentos[i];
+    const tipoIngresso = dadosCompra.tiposIngresso?.[i] || "inteira";
 
-      const ingressoPayload = {
+    const ingressoPayload = {
         nr_recibo,
-        cd_sessao: dadosCompra.sessaoId,
-        assento: assentoId,
-        tp_ingresso: tipoIngresso,
-        valor_ingresso: valorPorAssento
-      };
+        cd_sessao: sessaoSelecionada.cd_sessao,
+        cd_assento: assentoId.slice(0,3),      // garante CHAR(3)
+        tp_ingresso: tipoIngresso.slice(0,10), // garante CHAR(10)
+        valor_ingresso: Number(valorPorAssento.toFixed(2))
+    };
 
-      console.log(`🎟️ Criando ingresso ${i + 1}:`, ingressoPayload);
+    console.log(`🎟️ Criando ingresso ${i + 1}:`, ingressoPayload);
 
-      const resIngresso = await fetch(API_Ingresso, {
+    const resIngresso = await fetch(API_Ingresso, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ingressoPayload)
-      });
+    });
 
-      if (!resIngresso.ok) {
-        const erro = await resIngresso.json();
+    if (!resIngresso.ok) {
+        const erro = await resIngresso.json().catch(() => null);
         console.error("⚠️ Erro ao criar ingresso:", erro);
-      }
     }
+}
 
     console.log("✅ Ingressos criados");
 
