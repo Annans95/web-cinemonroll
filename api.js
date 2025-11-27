@@ -180,10 +180,14 @@ for (let i = 0; i < dadosCompra.assentos.length; i++) {
         continue;
     }
     //Marcar assento como ocupado
-    await fetch(`${API_Assento}/${cd_assento}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ocupado: true })
+        await fetch(`${API_Assento}/${cd_assento}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            numero_assento: assentoNumero, 
+            cd_sessao: sessaoSelecionada.cd_sessao,
+            ocupado: true 
+        })
     });
 }
 
