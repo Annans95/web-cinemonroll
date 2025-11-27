@@ -68,20 +68,25 @@ async function enviarPedido(dadosCompra) {
     }
     const nr_recibo = vendaCriada.nr_recibo;
 
-    // 1️⃣ Filtrar sessão correta
-    const sessaoSelecionada = sessoesDoFilme.find(
-      s => s.cd_sala === dadosCompra.cd_sala && `${s.tipo} ${s.idioma}` === dadosCompra.tp_ingresso
-    );
-
-    if (!sessaoSelecionada) {
-      alert("Sessão não encontrada!");
-      return;
+    // 3️⃣ Usar sessões já filtradas que vêm do front-end
+    const sessoesDoFilme = dadosCompra.sessoesDoFilme || [];
+    
+    if (sessoesDoFilme.length === 0) {
+      alert("❌ Nenhuma sessão disponível para este filme e tipo de sessão.");
+      return null;
     }
 
-    // Atualiza o cd_sessao do pedido
-    dadosCompra.sessaoId = sessaoSelecionada.cd_sessao;
+    // Validar se a sessão escolhida existe nas sessões filtradas
+    const sessaoSelecionada = sessoesDoFilme.find(s => s.cd_sessao === dadosCompra.sessaoId);
+    
+    if (!sessaoSelecionada) {
+      alert("❌ Sessão selecionada não encontrada!");
+      return null;
+    }
 
-    // 2️⃣ Criar ingressos
+    console.log("✅ Sessão validada:", sessaoSelecionada);
+
+    // 4️⃣ Criar ingressos
     for (const assento of dadosCompra.assentos) {
       const ingressoPayload = {
         nr_recibo,
@@ -98,7 +103,7 @@ async function enviarPedido(dadosCompra) {
       });
     }
 
-    // 4️⃣ Criar lanches dinamicamente
+    // 5️⃣ Criar lanches dinamicamente
     if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
       // 4.1 Buscar lanches do back-end
       const resLanches = await fetch(API_Lanche);
@@ -131,7 +136,7 @@ async function enviarPedido(dadosCompra) {
       }
     }
 
-    // 5️⃣ Recalcular total
+    // 6️⃣ Recalcular total
     await fetch(`${API_Venda}/recalcular/${nr_recibo}`, { method: "PUT" });
 
     console.log("✅ Pedido enviado com sucesso!", { venda: vendaCriada, nr_recibo });

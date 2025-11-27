@@ -66,6 +66,8 @@ function mapTipoSessao(tipoSessao) {
 
     // Variável global para armazenar o ID da sessão escolhida
     let sessaoIdGlobal = null;
+    // Variável global para armazenar as sessões filtradas (será usada ao enviar pedido)
+    let sessoesDoFilme = [];
     
     // --- Buscar e popular sessões disponíveis ---
     async function carregarSessoesDisponiveis() {
@@ -105,6 +107,9 @@ function mapTipoSessao(tipoSessao) {
         const sessoesFiltradasPorFilmeESala = todasSessoes.filter(s => 
           s.cd_filme === cd_filme && s.cd_sala === cd_sala
         );
+
+        // Atualiza a variável global com as sessões filtradas
+        sessoesDoFilme = sessoesFiltradasPorFilmeESala;
 
         if (sessoesFiltradasPorFilmeESala.length === 0) {
           const showtimeSelect = document.getElementById("showtime");
@@ -509,7 +514,8 @@ function mapTipoSessao(tipoSessao) {
           quantidadeAssentos: selectedSeats.length,
           lanches: snackNames,
           pagamento: payment,
-          total: total
+          total: total,
+          sessoesDoFilme: sessoesDoFilme  // passa as sessões filtradas para o api.js
       };
 
         // Envia pedido ao back-end (função definida em api.js) e só prossegue em caso de sucesso
