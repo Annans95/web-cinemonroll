@@ -42,6 +42,20 @@ function mapFilme(titulo) {
   return mapa[titulo] || null;
 }
 
+// === MAPEAMENTO DE TIPO DE SESSÃO PARA cd_sala ===
+// Converte o tipo de sessão (ex: "2D-dub") para o código da sala no banco
+function mapTipoSessao(tipoSessao) {
+  const mapa = {
+    "2D-dub": 1,
+    "2D-leg": 2,
+    "3D-dub": 3,
+    "3D-leg": 4,
+    "IMAX-dub": 5,
+    "IMAX-leg": 6
+  };
+  return mapa[tipoSessao] || null;
+}
+
   // === Código executado apenas na página de checkout ===
   if (window.location.pathname.includes("checkout.html")) {
     // Elemento que mostra o título do filme no topo
@@ -63,6 +77,23 @@ function mapFilme(titulo) {
           return;
         }
 
+        // Pega o tipo de sessão selecionado
+        const sessionTypeEl = document.getElementById("session-type");
+        const tipoSessao = sessionTypeEl ? sessionTypeEl.value : "";
+        
+        if (!tipoSessao) {
+          // Se não selecionou tipo de sessão ainda, limpa o select de horários
+          const showtimeSelect = document.getElementById("showtime");
+          showtimeSelect.innerHTML = '<option value="">Primeiro selecione o tipo de sessão</option>';
+          return;
+        }
+
+        const cd_sala = mapTipoSessao(tipoSessao);
+        if (!cd_sala) {
+          alert("❌ Tipo de sessão inválido.");
+          return;
+        }
+
         const resposta = await fetch(API_Sessao, { method: "GET" });
         if (!resposta.ok) {
           alert("❌ Erro ao buscar sessões. Verifique se o back-end está rodando.");
@@ -70,38 +101,40 @@ function mapFilme(titulo) {
         }
 
         const todasSessoes = await resposta.json();
-        // Filtra sessões do filme escolhido
-        const sessoesDoFilme = todasSessoes.filter(s => s.cd_filme === cd_filme);
+        // Filtra sessões pelo filme E pela sala (tipo de sessão)
+        const sessoesFiltradasPorFilmeESala = todasSessoes.filter(s => 
+          s.cd_filme === cd_filme && s.cd_sala === cd_sala
+        );
 
-        if (sessoesDoFilme.length === 0) {
-          alert("⚠️ Não há sessões disponíveis para este filme.");
-          window.location.href = "index.html";
+        if (sessoesFiltradasPorFilmeESala.length === 0) {
+          const showtimeSelect = document.getElementById("showtime");
+          showtimeSelect.innerHTML = '<option value="">Nenhuma sessão disponível para este tipo</option>';
+          console.log("⚠️ Nenhuma sessão encontrada para:", { cd_filme, cd_sala });
           return;
         }
 
-        // Popular o select de horários apenas com o horário do BD
+        // Popular o select de horários apenas com as sessões filtradas
         const showtimeSelect = document.getElementById("showtime");
         showtimeSelect.innerHTML = '<option value="">Selecione um horário</option>';
         
-        sessoesDoFilme.forEach(sessao => {
+        sessoesFiltradasPorFilmeESala.forEach(sessao => {
           const option = document.createElement("option");
           option.value = sessao.cd_sessao; // ID numérico real
-          // Formata e mostra apenas o horário do banco de dados
+          // Formata e mostra "Sessão" + horário do banco de dados
           const dataHora = new Date(sessao.data_hora);
           const horario = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-          option.textContent = horario;
+          option.textContent = `Sessão ${horario}`;
           showtimeSelect.appendChild(option);
         });
 
-        console.log("✅ Sessões carregadas:", sessoesDoFilme);
+        console.log("✅ Sessões carregadas (filme + sala):", sessoesFiltradasPorFilmeESala);
       } catch (erro) {
         console.error("❌ Erro ao carregar sessões:", erro);
         alert("❌ Erro de conexão com o servidor.");
       }
     }
 
-    // Carregar sessões ao abrir a página
-    carregarSessoesDisponiveis();
+    // Sessões serão carregadas quando o usuário selecionar o tipo de sessão
 
     // --- Função para carregar assentos ocupados do backend ---
     async function carregarAssentosOcupados() {
@@ -214,7 +247,11 @@ function mapFilme(titulo) {
   }
 
   if (sessionTypeEl) {
-    sessionTypeEl.addEventListener("change", updateSummary);
+    sessionTypeEl.addEventListener("change", () => {
+      // Quando tipo de sessão muda, recarrega os horários filtrados
+      carregarSessoesDisponiveis();
+      updateSummary();
+    });
   }
   document.querySelectorAll("input[name='payment']").forEach(r => r.addEventListener("change", updateSummary));
 
