@@ -501,6 +501,12 @@ function mapTipoSessao(tipoSessao) {
         // monta o objeto com os dados da compra
         // Extrai os IDs dos assentos selecionados (ex: ["A1", "B3", "C5"])
         const assentosIds = Array.from(selectedSeats).map(seat => seat.dataset.id);
+        
+        // Extrai os tipos de ingresso correspondentes a cada assento
+        const tiposIngresso = assentosIds.map(assentoId => {
+          const ticketSelect = document.querySelector(`.ticket-type-select[data-seat="${assentoId}"]`);
+          return ticketSelect ? ticketSelect.value : "inteira";
+        });
 
         const dados = {
           cd_cliente: 1, // valor fixo temporário
@@ -511,6 +517,7 @@ function mapTipoSessao(tipoSessao) {
           sessaoId: sessaoIdGlobal,  // usa o ID gerado pelo servidor
           horario: showtime,
           assentos: assentosIds,  // agora envia os IDs específicos dos assentos
+          tiposIngresso: tiposIngresso,  // tipos de ingresso por assento
           quantidadeAssentos: selectedSeats.length,
           lanches: snackNames,
           pagamento: payment,

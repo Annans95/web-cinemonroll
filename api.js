@@ -28,12 +28,32 @@ const API_Assento = `${API_URL}/assento`;
 /*  Função para enviar os dados da compra ao back-end */
 async function enviarPedido(dadosCompra) {
   try {
-    // 1️⃣ Criar cliente
+    console.log("📦 Dados recebidos:", dadosCompra);
+
+    // 1️⃣ Validações iniciais
+    if (!dadosCompra.nome || !dadosCompra.email) {
+      alert("❌ Nome e email são obrigatórios.");
+      return null;
+    }
+
+    if (!dadosCompra.sessaoId) {
+      alert("❌ Selecione uma sessão válida.");
+      return null;
+    }
+
+    if (!dadosCompra.assentos || dadosCompra.assentos.length === 0) {
+      alert("❌ Selecione pelo menos um assento.");
+      return null;
+    }
+
+    // 2️⃣ Criar cliente
     const clientePayload = {
       cliente: dadosCompra.nome,
-      email: dadosCompra.email || null,
+      email: dadosCompra.email,
       cpf: dadosCompra.cpf || null
     };
+
+    console.log("👤 Criando cliente:", clientePayload);
 
     const resCliente = await fetch(API_Cliente, {
       method: "POST",
@@ -41,23 +61,26 @@ async function enviarPedido(dadosCompra) {
       body: JSON.stringify(clientePayload)
     });
 
-    const clienteCriado = await resCliente.json();
-
     if (!resCliente.ok) {
-      console.error("⚠️ Erro ao criar cliente:", clienteCriado);
-      alert("Erro ao criar cliente.");
+      const erro = await resCliente.json();
+      console.error("⚠️ Erro ao criar cliente:", erro);
+      alert("Erro ao criar cliente. Verifique os dados.");
       return null;
     }
 
+    const clienteCriado = await resCliente.json();
     const cd_cliente = clienteCriado.cd_cliente;
+    console.log("✅ Cliente criado:", cd_cliente);
 
-    // 2️⃣ Criar venda
+    // 3️⃣ Criar venda
     const vendaPayload = {
       cd_cliente,
-      dt_hr_venda: new Date(),
-      valor_total: Number(dadosCompra.total.toFixed(2)), // valor total como decimal
-      tp_pagamento: dadosCompra.pagamento
+      dt_hr_venda: new Date().toISOString(),
+      valor_total: dadosCompra.total || 0,
+      tp_pagamento: dadosCompra.pagamento || "dinheiro"
     };
+
+    console.log("💳 Criando venda:", vendaPayload);
 
     const resVenda = await fetch(API_Venda, {
       method: "POST",
@@ -65,81 +88,119 @@ async function enviarPedido(dadosCompra) {
       body: JSON.stringify(vendaPayload)
     });
 
-    const vendaCriada = await resVenda.json();
-
     if (!resVenda.ok) {
-      console.error("⚠️ Erro ao criar venda:", vendaCriada);
+      const erro = await resVenda.json();
+      console.error("⚠️ Erro ao criar venda:", erro);
       alert("Erro ao criar venda.");
       return null;
     }
 
+    const vendaCriada = await resVenda.json();
     const nr_recibo = vendaCriada.nr_recibo;
+    console.log("✅ Venda criada:", nr_recibo);
 
-    // 3️⃣ Validar sessão
+    // 4️⃣ Validar sessão
     const sessoesDoFilme = dadosCompra.sessoesDoFilme || [];
+    
     if (sessoesDoFilme.length === 0) {
       alert("❌ Nenhuma sessão disponível para este filme e tipo de sessão.");
       return null;
     }
 
     const sessaoSelecionada = sessoesDoFilme.find(s => s.cd_sessao === dadosCompra.sessaoId);
+    
     if (!sessaoSelecionada) {
       alert("❌ Sessão selecionada não encontrada!");
       return null;
     }
+
     console.log("✅ Sessão validada:", sessaoSelecionada);
 
-    // 4️⃣ Criar ingressos
-    for (const assento of dadosCompra.assentos) {
+    // 5️⃣ Criar ingressos (um para cada assento)
+    const valorPorAssento = dadosCompra.total / dadosCompra.quantidadeAssentos;
+    
+    for (let i = 0; i < dadosCompra.assentos.length; i++) {
+      const assentoId = dadosCompra.assentos[i];
+      // Pega o tipo de ingresso específico deste assento (se houver array de tipos)
+      const tipoIngresso = dadosCompra.tiposIngresso && dadosCompra.tiposIngresso[i] 
+        ? dadosCompra.tiposIngresso[i] 
+        : "inteira";
+
       const ingressoPayload = {
         nr_recibo,
         cd_sessao: dadosCompra.sessaoId,
-        cd_assento: Number(assento), // garante que assento é número
-        tp_ingresso: dadosCompra.tp_ingresso.slice(0, 10), // <= 10 chars
-        valor_ingresso: Number((dadosCompra.total / dadosCompra.quantidadeAssentos).toFixed(2))
+        assento: assentoId,
+        tp_ingresso: tipoIngresso,
+        valor_ingresso: valorPorAssento
       };
 
-      await fetch(API_Ingresso, {
+      console.log(`🎟️ Criando ingresso ${i + 1}:`, ingressoPayload);
+
+      const resIngresso = await fetch(API_Ingresso, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ingressoPayload)
       });
-    }
 
-    // 5️⃣ Criar lanches dinamicamente
-    if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
-      const resLanches = await fetch(API_Lanche);
-      const lanchesDisponiveis = await resLanches.json();
-
-      const lanchesArray = dadosCompra.lanches.split(",").map(l => l.trim());
-
-      for (const lancheStr of lanchesArray) {
-        const qtdMatch = lancheStr.match(/\(x(\d+)\)/);
-        const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 1;
-        const nomeLanche = lancheStr.replace(/\(x\d+\)/, "").trim();
-
-        const lancheInfo = lanchesDisponiveis.find(l => l.nome === nomeLanche);
-        if (!lancheInfo) continue;
-
-        const vendaLanchePayload = {
-          nr_recibo,
-          cd_lanche: lancheInfo.cd_lanche,
-          quantidade,
-          valor_parcial: Number((quantidade * Number(lancheInfo.valor)).toFixed(2))
-        };
-
-        await fetch(API_VendaLanche, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(vendaLanchePayload)
-        });
+      if (!resIngresso.ok) {
+        const erro = await resIngresso.json();
+        console.error("⚠️ Erro ao criar ingresso:", erro);
       }
     }
 
-    // 6️⃣ Recalcular total
+    console.log("✅ Ingressos criados");
+
+    // 6️⃣ Criar lanches dinamicamente
+    if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
+      console.log("🍿 Processando lanches...");
+      
+      const resLanches = await fetch(API_Lanche);
+      if (!resLanches.ok) {
+        console.warn("⚠️ Não foi possível buscar lanches");
+      } else {
+        const lanchesDisponiveis = await resLanches.json();
+        const lanchesArray = dadosCompra.lanches.split(",").map(l => l.trim());
+
+        for (const lancheStr of lanchesArray) {
+          // Extrai quantidade do formato "Nome (x3)"
+          const qtdMatch = lancheStr.match(/\(x(\d+)\)/);
+          const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 1;
+          const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
+
+          const lancheInfo = lanchesDisponiveis.find(l => 
+            l.nome && nomeLanche.includes(l.nome)
+          );
+
+          if (!lancheInfo) {
+            console.warn(`⚠️ Lanche não encontrado: ${nomeLanche}`);
+            continue;
+          }
+
+          const vendaLanchePayload = {
+            nr_recibo,
+            cd_lanche: lancheInfo.cd_lanche,
+            quantidade,
+            valor_parcial: quantidade * Number(lancheInfo.valor)
+          };
+
+          console.log("🍿 Criando venda-lanche:", vendaLanchePayload);
+
+          await fetch(API_VendaLanche, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(vendaLanchePayload)
+          });
+        }
+
+        console.log("✅ Lanches criados");
+      }
+    }
+
+    // 7️⃣ Recalcular total da venda
+    console.log("🔄 Recalculando total...");
     await fetch(`${API_Venda}/recalcular/${nr_recibo}`, { method: "PUT" });
 
-    console.log("✅ Pedido enviado com sucesso!", { venda: vendaCriada, nr_recibo });
+    console.log("✅ Pedido finalizado com sucesso!", { nr_recibo });
     return { venda: vendaCriada, nr_recibo };
 
   } catch (erro) {
