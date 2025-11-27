@@ -79,17 +79,17 @@ function mapFilme(titulo) {
           return;
         }
 
-        // Popular o select de horários com as sessões reais
+        // Popular o select de horários apenas com o horário do BD
         const showtimeSelect = document.getElementById("showtime");
         showtimeSelect.innerHTML = '<option value="">Selecione um horário</option>';
         
         sessoesDoFilme.forEach(sessao => {
           const option = document.createElement("option");
           option.value = sessao.cd_sessao; // ID numérico real
-          // Formata data/hora para exibição
+          // Formata e mostra apenas o horário do banco de dados
           const dataHora = new Date(sessao.data_hora);
           const horario = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-          option.textContent = `${sessao.sessao} - ${horario}`;
+          option.textContent = horario;
           showtimeSelect.appendChild(option);
         });
 

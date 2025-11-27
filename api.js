@@ -68,14 +68,29 @@ async function enviarPedido(dadosCompra) {
     }
     const nr_recibo = vendaCriada.nr_recibo;
 
-    // 3️⃣ Criar ingressos
+    // 1️⃣ Filtrar sessão correta
+    const sessaoSelecionada = sessoesDoFilme.find(
+      s => s.cd_sala === dadosCompra.cd_sala && `${s.tipo} ${s.idioma}` === dadosCompra.tp_ingresso
+    );
+
+    if (!sessaoSelecionada) {
+      alert("Sessão não encontrada!");
+      return;
+    }
+
+    // Atualiza o cd_sessao do pedido
+    dadosCompra.sessaoId = sessaoSelecionada.cd_sessao;
+
+    // 2️⃣ Criar ingressos
     for (const assento of dadosCompra.assentos) {
       const ingressoPayload = {
         nr_recibo,
         cd_sessao: dadosCompra.sessaoId,
         assento,
+        tp_ingresso: dadosCompra.tp_ingresso,
         valor_ingresso: dadosCompra.total / dadosCompra.quantidadeAssentos
       };
+
       await fetch(API_Ingresso, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
