@@ -40,50 +40,53 @@ async function enviarPedido(dadosCompra) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(clientePayload)
     });
+
     const clienteCriado = await resCliente.json();
+
     if (!resCliente.ok) {
       console.error("⚠️ Erro ao criar cliente:", clienteCriado);
       alert("Erro ao criar cliente.");
       return null;
     }
+
     const cd_cliente = clienteCriado.cd_cliente;
 
     // 2️⃣ Criar venda
     const vendaPayload = {
       cd_cliente,
       dt_hr_venda: new Date(),
-      valor_total: dadosCompra.total,
+      valor_total: Number(dadosCompra.total.toFixed(2)), // valor total como decimal
       tp_pagamento: dadosCompra.pagamento
     };
+
     const resVenda = await fetch(API_Venda, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(vendaPayload)
     });
+
     const vendaCriada = await resVenda.json();
+
     if (!resVenda.ok) {
       console.error("⚠️ Erro ao criar venda:", vendaCriada);
       alert("Erro ao criar venda.");
       return null;
     }
+
     const nr_recibo = vendaCriada.nr_recibo;
 
-    // 3️⃣ Usar sessões já filtradas que vêm do front-end
+    // 3️⃣ Validar sessão
     const sessoesDoFilme = dadosCompra.sessoesDoFilme || [];
-    
     if (sessoesDoFilme.length === 0) {
       alert("❌ Nenhuma sessão disponível para este filme e tipo de sessão.");
       return null;
     }
 
-    // Validar se a sessão escolhida existe nas sessões filtradas
     const sessaoSelecionada = sessoesDoFilme.find(s => s.cd_sessao === dadosCompra.sessaoId);
-    
     if (!sessaoSelecionada) {
       alert("❌ Sessão selecionada não encontrada!");
       return null;
     }
-
     console.log("✅ Sessão validada:", sessaoSelecionada);
 
     // 4️⃣ Criar ingressos
@@ -91,9 +94,9 @@ async function enviarPedido(dadosCompra) {
       const ingressoPayload = {
         nr_recibo,
         cd_sessao: dadosCompra.sessaoId,
-        assento,
-        tp_ingresso: dadosCompra.tp_ingresso,
-        valor_ingresso: dadosCompra.total / dadosCompra.quantidadeAssentos
+        cd_assento: Number(assento), // garante que assento é número
+        tp_ingresso: dadosCompra.tp_ingresso.slice(0, 10), // <= 10 chars
+        valor_ingresso: Number((dadosCompra.total / dadosCompra.quantidadeAssentos).toFixed(2))
       };
 
       await fetch(API_Ingresso, {
@@ -105,11 +108,9 @@ async function enviarPedido(dadosCompra) {
 
     // 5️⃣ Criar lanches dinamicamente
     if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
-      // 4.1 Buscar lanches do back-end
       const resLanches = await fetch(API_Lanche);
-      const lanchesDisponiveis = await resLanches.json(); // array de { cd_lanche, nome, valor }
+      const lanchesDisponiveis = await resLanches.json();
 
-      // 4.2 Mapear lanches do pedido
       const lanchesArray = dadosCompra.lanches.split(",").map(l => l.trim());
 
       for (const lancheStr of lanchesArray) {
@@ -117,7 +118,6 @@ async function enviarPedido(dadosCompra) {
         const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 1;
         const nomeLanche = lancheStr.replace(/\(x\d+\)/, "").trim();
 
-        // Encontrar o cd_lanche e valor pelo nome
         const lancheInfo = lanchesDisponiveis.find(l => l.nome === nomeLanche);
         if (!lancheInfo) continue;
 
@@ -125,7 +125,7 @@ async function enviarPedido(dadosCompra) {
           nr_recibo,
           cd_lanche: lancheInfo.cd_lanche,
           quantidade,
-          valor_parcial: quantidade * Number(lancheInfo.valor)
+          valor_parcial: Number((quantidade * Number(lancheInfo.valor)).toFixed(2))
         };
 
         await fetch(API_VendaLanche, {
