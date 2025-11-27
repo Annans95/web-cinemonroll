@@ -117,17 +117,27 @@ async function enviarPedido(dadosCompra) {
     console.log("✅ Sessão validada:", sessaoSelecionada);
 
     // 5️⃣ Criar ingressos (um para cada assento)
-    const valorPorAssento = dadosCompra.total / dadosCompra.quantidadeAssentos;
-    
-   for (let i = 0; i < dadosCompra.assentos.length; i++) {
-    const assentoId = dadosCompra.assentos[i];
+const valorPorAssento = dadosCompra.total / dadosCompra.quantidadeAssentos;
+
+for (let i = 0; i < dadosCompra.assentos.length; i++) {
+    const assentoNumero = dadosCompra.assentos[i];
     const tipoIngresso = dadosCompra.tiposIngresso?.[i] || "inteira";
+
+    // 🔹 Buscar cd_assento no banco pelo número do assento e sessão
+    const assentoRecord = await fetch(`${API_Assento}/sessao/${sessaoSelecionada.cd_sessao}`)
+        .then(res => res.json())
+        .then(assentosSessao => assentosSessao.find(a => a.numero_assento === assentoNumero));
+
+    if (!assentoRecord) {
+        console.error(`❌ Assento ${assentoNumero} não encontrado na sessão.`);
+        continue; // pula para o próximo assento
+    }
 
     const ingressoPayload = {
         nr_recibo,
         cd_sessao: sessaoSelecionada.cd_sessao,
-        cd_assento: assentoId.slice(0,3),      // garante CHAR(3)
-        tp_ingresso: tipoIngresso.slice(0,10), // garante CHAR(10)
+        cd_assento: assentoRecord.cd_assento,       // ID correto do banco
+        tp_ingresso: tipoIngresso.slice(0,10),     // garante CHAR(10)
         valor_ingresso: Number(valorPorAssento.toFixed(2))
     };
 
@@ -145,7 +155,7 @@ async function enviarPedido(dadosCompra) {
     }
 }
 
-    console.log("✅ Ingressos criados");
+console.log("✅ Ingressos criados");
 
     // 6️⃣ Criar lanches dinamicamente
     if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
