@@ -14,7 +14,7 @@
    pela URL real do seu endpoint Node.js quando souber.
 */
 // Endpoint correto para enviar um pedido/venda ao back-end
-const BASE_URL = "apisistemaingresso-production.up.railway.app"
+const BASE_URL = "https://apisistemaingresso-production.up.railway.app"
 const API_URL = `${BASE_URL}/venda`;
 const API_Filme = `${BASE_URL}/filme`;
 const API_Sala = `${BASE_URL}/sala`;
