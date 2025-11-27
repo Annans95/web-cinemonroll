@@ -12,19 +12,35 @@
   - Mostrar modal de confirmação e modal de sucesso
 */
 
-// --- Botões de compra na página principal ---
-// Seleciona todos os botões .buy-btn e adiciona handler para salvar o filme escolhido
+// --- Botões de compra na página principal (index.html) ---
+// Salva APENAS o filme escolhido, SEM definir sessão
 const buyButtons = document.querySelectorAll(".buy-btn");
 
 buyButtons.forEach(btn => {
-  // Ao clicar em um botão de compra, guardamos o nome do filme no localStorage
-  // e navegamos para a página de checkout
   btn.addEventListener("click", () => {
     const selectedMovie = btn.dataset.movie;
+    // Salva apenas o título do filme
     localStorage.setItem("selectedMovie", selectedMovie);
+    // Redireciona para checkout onde o usuário escolherá a sessão
     window.location.href = "checkout.html";
   });
 });
+
+// === MAPEAMENTO DE FILMES PARA cd_filme ===
+// Converte título do filme para o ID no banco de dados
+function mapFilme(titulo) {
+  const mapa = {
+    "Vingadores: Ultimato": 1,
+    "Coringa": 2,
+    "Homem-Aranha no Aranhaverso": 3,
+    "Frozen II": 4,
+    "Avatar: O Caminho da Água": 5,
+    "The Batman": 6,
+    "Barbie": 7,
+    "Oppenheimer": 8
+  };
+  return mapa[titulo] || null;
+}
 
   // === Código executado apenas na página de checkout ===
   if (window.location.pathname.includes("checkout.html")) {
@@ -34,90 +50,103 @@ buyButtons.forEach(btn => {
     const movieName = localStorage.getItem("selectedMovie");
     if (movieName) movieTitleEl.textContent = movieName;
 
-    // --- Gerar ou recuperar sessaoId do backend ---
-    let sessaoIdGlobal = localStorage.getItem("sessaoId");
+    // Variável global para armazenar o ID da sessão escolhida
+    let sessaoIdGlobal = null;
     
-    async function gerarSessaoId() {
+    // --- Buscar e popular sessões disponíveis ---
+    async function carregarSessoesDisponiveis() {
       try {
-        const resposta = await fetch(API_Sessao, { method: "GET" });
-        if (resposta.ok) {
-          const data = await resposta.json();
-          // O back-end retorna um array de sessões (ou um objeto). Aceitamos ambos:
-          if (Array.isArray(data) && data.length > 0) {
-            // tenta usar um campo numérico que identifique a sessão (ex: cd_sessao)
-            sessaoIdGlobal = data[0].cd_sessao ?? data[0].id ?? data[0].sessaoId;
-          } else if (data && (data.sessaoId || data.cd_sessao || data.id)) {
-            sessaoIdGlobal = data.sessaoId ?? data.cd_sessao ?? data.id;
-          }
-
-          if (sessaoIdGlobal) {
-            localStorage.setItem("sessaoId", sessaoIdGlobal);
-            console.log("✅ SessãoId obtido do servidor:", sessaoIdGlobal);
-            return sessaoIdGlobal;
-          }
-
-          // se o servidor não forneceu um id utilizável, cairá no fallback abaixo
-        } else {
-          console.warn("⚠️ Erro ao gerar sessaoId");
-          // fallback: gera um ID local (UUID simples)
-          sessaoIdGlobal = "local-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
-          localStorage.setItem("sessaoId", sessaoIdGlobal);
-          return sessaoIdGlobal;
+        const cd_filme = mapFilme(movieName);
+        if (!cd_filme) {
+          alert("❌ Filme não encontrado no sistema.");
+          window.location.href = "index.html";
+          return;
         }
+
+        const resposta = await fetch(API_Sessao, { method: "GET" });
+        if (!resposta.ok) {
+          alert("❌ Erro ao buscar sessões. Verifique se o back-end está rodando.");
+          return;
+        }
+
+        const todasSessoes = await resposta.json();
+        // Filtra sessões do filme escolhido
+        const sessoesDoFilme = todasSessoes.filter(s => s.cd_filme === cd_filme);
+
+        if (sessoesDoFilme.length === 0) {
+          alert("⚠️ Não há sessões disponíveis para este filme.");
+          window.location.href = "index.html";
+          return;
+        }
+
+        // Popular o select de horários com as sessões reais
+        const showtimeSelect = document.getElementById("showtime");
+        showtimeSelect.innerHTML = '<option value="">Selecione um horário</option>';
+        
+        sessoesDoFilme.forEach(sessao => {
+          const option = document.createElement("option");
+          option.value = sessao.cd_sessao; // ID numérico real
+          // Formata data/hora para exibição
+          const dataHora = new Date(sessao.data_hora);
+          const horario = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          option.textContent = `${sessao.sessao} - ${horario}`;
+          showtimeSelect.appendChild(option);
+        });
+
+        console.log("✅ Sessões carregadas:", sessoesDoFilme);
       } catch (erro) {
-        console.error("❌ Erro ao conectar para gerar sessaoId:", erro);
-        // fallback: cria um ID local
-        sessaoIdGlobal = "local-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem("sessaoId", sessaoIdGlobal);
-        return sessaoIdGlobal;
+        console.error("❌ Erro ao carregar sessões:", erro);
+        alert("❌ Erro de conexão com o servidor.");
       }
     }
 
+    // Carregar sessões ao abrir a página
+    carregarSessoesDisponiveis();
+
     // --- Função para carregar assentos ocupados do backend ---
-    // Busca a lista de assentos já comprados no banco de dados
     async function carregarAssentosOcupados() {
       try {
-        // Usa o sessaoId do servidor (ou fallback local)
+        // Usa o sessaoId selecionado pelo usuário
         if (!sessaoIdGlobal) {
-          await gerarSessaoId();
+          console.warn("⚠️ Nenhuma sessão selecionada ainda.");
+          return;
         }
 
-        const params = new URLSearchParams({
-          sessaoId: sessaoIdGlobal
-        });
-
-        // Limpa ocupados anteriores antes de aplicar os novos
+        // Limpa ocupados anteriores
         document.querySelectorAll('.seat.occupied').forEach(s => s.classList.remove('occupied'));
 
-        const url = `${API_Assento}/sessao/${params.get("sessaoId")}`;
+        const url = `${API_Assento}/sessao/${sessaoIdGlobal}`;
+        console.log("🔍 Buscando assentos ocupados:", url);
+        
         const resposta = await fetch(url);
         if (resposta.ok) {
           const data = await resposta.json();
-          // o backend pode retornar uma lista de objetos { numero_assento: 'A1', ... }
-          // ou um objeto { assentos: ['A1', ...] } — aceitamos ambos
           let assentosOcupados = [];
+          
           if (Array.isArray(data)) {
-            assentosOcupados = data.map(a => a.numero_assento ?? a.assento ?? a);
+            assentosOcupados = data
+              .filter(a => a.ocupado === true)
+              .map(a => a.numero_assento ?? a.assento ?? a);
           } else if (Array.isArray(data.assentos)) {
             assentosOcupados = data.assentos;
           }
 
-          // marca cada assento como ocupado
           assentosOcupados.forEach(id => {
             const seatElement = document.querySelector(`[data-id="${id}"]`);
             if (seatElement) {
               seatElement.classList.add("occupied");
-              // se estiver selecionado, remove seleção para evitar conflito
               seatElement.classList.remove('selected');
             }
           });
 
-          console.log("✅ Assentos ocupados carregados:", { sessaoId: sessaoIdGlobal, assentosOcupados });
+          console.log("✅ Assentos ocupados:", assentosOcupados);
+        } else if (resposta.status === 404) {
+          console.log("ℹ️ Todos os assentos disponíveis.");
         } else {
-          console.warn("⚠️ Erro ao carregar assentos ocupados", resposta.status);
+          console.warn("⚠️ Erro ao carregar assentos:", resposta.status);
         }
       } catch (erro) {
-        console.error("❌ Erro ao conectar com servidor de assentos:", erro);
+        console.error("❌ Erro ao conectar:", erro);
       }
     }  // --- Geração da planta de assentos ---
   // Busca o container dos assentos e cria um grid (A1..E8) em ordem de linhas (horizontal)
@@ -142,11 +171,9 @@ buyButtons.forEach(btn => {
       }
     }
 
-  // Gera o sessaoId no servidor ANTES de carregar assentos (não bloqueia; se não existir será criado on-demand)
-  if (!sessaoIdGlobal) { gerarSessaoId().catch(console.error); }
+  // NÃO carrega assentos automaticamente - aguarda usuário escolher horário
 
-    // Carrega assentos ocupados do backend APÓS criar os assentos
-    carregarAssentosOcupados();    // Delegação de clique para selecionar/deselecionar assentos
+    // Delegação de clique para selecionar/deselecionar assentos
     seatsContainer.addEventListener("click", (e) => {
       if (e.target.classList.contains("seat") && !e.target.classList.contains("occupied")) {
         // alterna estado .selected e atualiza UI relacionada
@@ -170,22 +197,24 @@ buyButtons.forEach(btn => {
     });
   }
 
-  // Atualiza resumo e recarrega assentos quando o horário/tipo de sessão mudarem
+  // Quando usuário escolhe um horário, salva o sessaoId e carrega assentos
   const showtimeEl = document.getElementById("showtime");
   const sessionTypeEl = document.getElementById("session-type");
 
   if (showtimeEl) {
     showtimeEl.addEventListener("change", () => {
+      // O value agora é o cd_sessao numérico real
+      sessaoIdGlobal = parseInt(showtimeEl.value) || null;
+      if (sessaoIdGlobal) {
+        console.log("✅ Sessão selecionada:", sessaoIdGlobal);
+        carregarAssentosOcupados();
+      }
       updateSummary();
-      carregarAssentosOcupados();
     });
   }
 
   if (sessionTypeEl) {
-    sessionTypeEl.addEventListener("change", () => {
-      updateSummary();
-      carregarAssentosOcupados();
-    });
+    sessionTypeEl.addEventListener("change", updateSummary);
   }
   document.querySelectorAll("input[name='payment']").forEach(r => r.addEventListener("change", updateSummary));
 
