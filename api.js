@@ -193,58 +193,63 @@ for (let i = 0; i < dadosCompra.assentos.length; i++) {
 
 console.log("✅ Ingressos criados");
 
-// 6️⃣ Criar lanches dinamicamente usando cd_lanche
+// 6️⃣ Criar lanches dinamicamente usando cd_lanche com mapa
 if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
     console.log("🍿 Processando lanches...");
 
-    const resLanches = await fetch(API_Lanche);
-    if (!resLanches.ok) {
-        console.warn("⚠️ Não foi possível buscar lanches");
-    } else {
-        const lanchesDisponiveis = await resLanches.json();
-        const lanchesArray = dadosCompra.lanches.split(",").map(l => l.trim());
+    // Mapa front -> cd_lanche do banco
+    const lancheMap = {
+        "Combo Pipoca Média + Refri 500ml": 1,
+        "Pipoca Pequena": 2,
+        "Pipoca Média": 3,
+        "Pipoca Grande": 4,
+        "Refrigerante 300ml": 5,
+        "Refrigerante 500ml": 6,
+        "Refrigerante 700ml": 7,
+        "Barra de Chocolate 90g": 8,
+        "M&M 80g": 9,
+        "Fini 80g (Tubes, Beijo, Dentadura)": 10
+    };
 
-        for (const lancheStr of lanchesArray) {
-            if (!lancheStr) continue; // pula strings vazias
+    const lanchesArray = dadosCompra.lanches.split(",").map(l => l.trim());
 
-            // Extrai quantidade do formato "Nome (x3)"
-            const qtdMatch = lancheStr.match(/\(x(\d+)\)/);
-            const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 1;
+    for (const lancheStr of lanchesArray) {
+        if (!lancheStr) continue; // pula strings vazias
 
-            // Remove a parte da quantidade do nome
-            const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
-            if (!nomeLanche) continue; // pula se o nome ficou vazio
+        // Extrai quantidade do formato "Nome (x3)"
+        const qtdMatch = lancheStr.match(/\(x(\d+)\)/);
+        const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 1;
 
-            // Busca lanche no banco usando match parcial
-            const lancheInfo = lanchesDisponiveis.find(l =>
-                l.nome && l.nome.toLowerCase().includes(nomeLanche.toLowerCase())
-            );
+        // Remove a parte da quantidade do nome
+        const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
+        if (!nomeLanche) continue; // pula se o nome ficou vazio
 
-            if (!lancheInfo) {
-                console.warn(`⚠️ Lanche não encontrado no banco: ${nomeLanche}`);
-                continue;
-            }
-
-            const vendaLanchePayload = {
-                nr_recibo,
-                cd_lanche: lancheInfo.cd_lanche,
-                quantidade,
-                valor_parcial: quantidade * Number(lancheInfo.valor_lanche)
-            };
-
-            console.log("🍿 Criando venda-lanche:", vendaLanchePayload);
-
-            await fetch(API_VendaLanche, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(vendaLanchePayload)
-            });
+        // Pega cd_lanche do mapa
+        const cd_lanche = lancheMap[nomeLanche];
+        if (!cd_lanche) {
+            console.warn(`⚠️ Lanche não encontrado no mapa: ${nomeLanche}`);
+            continue;
         }
 
-        console.log("✅ Lanches criados com cd_lanche");
-      }
-     }
-     
+        const vendaLanchePayload = {
+            nr_recibo,
+            cd_lanche,
+            quantidade,
+            valor_parcial: quantidade * Number(lancheInfo?.valor_lanche || 0) // valor do front ou 0
+        };
+
+        console.log("🍿 Criando venda-lanche:", vendaLanchePayload);
+
+        await fetch(API_VendaLanche, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(vendaLanchePayload)
+        });
+    }
+
+    console.log("✅ Lanches criados com cd_lanche");
+}
+
 // 7️⃣ Recalcular total da venda (sempre recalcula, tenha ou não lanches)
 console.log("🔄 Recalculando total...");
 await fetch(`${API_Venda}/recalcular/${nr_recibo}`, { method: "PUT" });
