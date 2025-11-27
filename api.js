@@ -14,16 +14,16 @@
    pela URL real do seu endpoint Node.js quando souber.
 */
 // Endpoint correto para enviar um pedido/venda ao back-end
-const BASE_URL = "https://apisistemaingresso-production.up.railway.app"
-const API_URL = `${BASE_URL}/cliente`;
-const API_Filme = `${BASE_URL}/filme`;
-const API_Sala = `${BASE_URL}/sala`;
-const API_Sessao = `${BASE_URL}/sessao`;
-const API_Venda = `${BASE_URL}/venda`;
-const API_Ingresso = `${BASE_URL}/ingresso`;
-const API_Lanche = `${BASE_URL}/lanche`;
-const API_VendaLanche = `${BASE_URL}/venda-lanche`;
-const API_Assento = `${BASE_URL}/assento`;
+const API_URL = "https://apisistemaingresso-production.up.railway.app"
+const API_Cliente = `${API_URL}/cliente`;
+const API_Filme = `${API_URL}/filme`;
+const API_Sala = `${API_URL}/sala`;
+const API_Sessao = `${API_URL}/sessao`;
+const API_Venda = `${API_URL}/venda`;
+const API_Ingresso = `${API_URL}/ingresso`;
+const API_Lanche = `${API_URL}/lanche`;
+const API_VendaLanche = `${API_URL}/venda-lanche`;
+const API_Assento = `${API_URL}/assento`;
 
 /*  Função para enviar os dados da compra ao back-end */
 async function enviarPedido(dadosCompra) {
