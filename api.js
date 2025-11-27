@@ -210,16 +210,18 @@ if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
             // Extrai quantidade do formato "Nome (x3)"
             const qtdMatch = lancheStr.match(/\(x(\d+)\)/);
             const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 1;
-            const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
 
+            // Remove a parte da quantidade do nome
+            const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
             if (!nomeLanche) continue; // pula se o nome ficou vazio
 
+            // Busca lanche no banco usando match parcial
             const lancheInfo = lanchesDisponiveis.find(l =>
-                l.nome && l.nome.toLowerCase().trim() === nomeLanche.toLowerCase()
+                l.nome && l.nome.toLowerCase().includes(nomeLanche.toLowerCase())
             );
 
             if (!lancheInfo) {
-                console.warn(`⚠️ Lanche não encontrado: ${nomeLanche}`);
+                console.warn(`⚠️ Lanche não encontrado no banco: ${nomeLanche}`);
                 continue;
             }
 
@@ -227,7 +229,7 @@ if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
                 nr_recibo,
                 cd_lanche: lancheInfo.cd_lanche,
                 quantidade,
-                valor_parcial: quantidade * Number(lancheInfo.valor)
+                valor_parcial: quantidade * Number(lancheInfo.valor_lanche)
             };
 
             console.log("🍿 Criando venda-lanche:", vendaLanchePayload);
@@ -238,9 +240,11 @@ if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
                 body: JSON.stringify(vendaLanchePayload)
             });
         }
-    }
-}
 
+        console.log("✅ Lanches criados com cd_lanche");
+      }
+     }
+     
 // 7️⃣ Recalcular total da venda (sempre recalcula, tenha ou não lanches)
 console.log("🔄 Recalculando total...");
 await fetch(`${API_Venda}/recalcular/${nr_recibo}`, { method: "PUT" });
