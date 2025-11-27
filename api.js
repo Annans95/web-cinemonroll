@@ -193,22 +193,22 @@ for (let i = 0; i < dadosCompra.assentos.length; i++) {
 
 console.log("✅ Ingressos criados");
 
-// 6️⃣ Criar lanches dinamicamente usando cd_lanche com mapa
+// 6️⃣ Criar lanches dinamicamente usando cd_lanche e mapa de valores
 if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
     console.log("🍿 Processando lanches...");
 
-    // Mapa front -> cd_lanche do banco
+    // Mapa de lanches com cd_lanche e valor
     const lancheMap = {
-        "Combo Pipoca Média + Refri 500ml": 1,
-        "Pipoca Pequena": 2,
-        "Pipoca Média": 3,
-        "Pipoca Grande": 4,
-        "Refrigerante 300ml": 5,
-        "Refrigerante 500ml": 6,
-        "Refrigerante 700ml": 7,
-        "Barra de Chocolate 90g": 8,
-        "M&M 80g": 9,
-        "Fini 80g (Tubes, Beijo, Dentadura)": 10
+        "Combo Pipoca Média + Refri 500ml": { cd_lanche: 1, valor: 25 },
+        "Pipoca Pequena": { cd_lanche: 2, valor: 15 },
+        "Pipoca Média": { cd_lanche: 3, valor: 20 },
+        "Pipoca Grande": { cd_lanche: 4, valor: 25 },
+        "Refrigerante 300ml": { cd_lanche: 5, valor: 5 },
+        "Refrigerante 500ml": { cd_lanche: 6, valor: 10 },
+        "Refrigerante 700ml": { cd_lanche: 7, valor: 15 },
+        "Barra de Chocolate 90g": { cd_lanche: 8, valor: 7 },
+        "M&M 80g": { cd_lanche: 9, valor: 4.5 },
+        "Fini 80g": { cd_lanche: 10, valor: 7.5 }
     };
 
     const lanchesArray = dadosCompra.lanches.split(",").map(l => l.trim());
@@ -224,18 +224,18 @@ if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
         const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
         if (!nomeLanche) continue; // pula se o nome ficou vazio
 
-        // Pega cd_lanche do mapa
-        const cd_lanche = lancheMap[nomeLanche];
-        if (!cd_lanche) {
+        // Busca lanche no mapa
+        const lancheInfo = lancheMap[nomeLanche];
+        if (!lancheInfo) {
             console.warn(`⚠️ Lanche não encontrado no mapa: ${nomeLanche}`);
             continue;
         }
 
         const vendaLanchePayload = {
             nr_recibo,
-            cd_lanche,
+            cd_lanche: lancheInfo.cd_lanche,
             quantidade,
-            valor_parcial: quantidade * Number(lancheInfo?.valor_lanche || 0) // valor do front ou 0
+            valor_parcial: quantidade * lancheInfo.valor
         };
 
         console.log("🍿 Criando venda-lanche:", vendaLanchePayload);
@@ -247,7 +247,7 @@ if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
         });
     }
 
-    console.log("✅ Lanches criados com cd_lanche");
+    console.log("✅ Lanches criados com cd_lanche e valores corretos");
 }
 
 // 7️⃣ Recalcular total da venda (sempre recalcula, tenha ou não lanches)
