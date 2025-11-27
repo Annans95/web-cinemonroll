@@ -177,7 +177,14 @@ for (let i = 0; i < dadosCompra.assentos.length; i++) {
     if (!resIngresso.ok) {
         const erro = await resIngresso.json().catch(() => null);
         console.error("⚠️ Erro ao criar ingresso:", erro);
+        continue;
     }
+    //Marcar assento como ocupado
+    await fetch(`${API_Assento}/${cd_assento}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ocupado: true })
+    });
 }
 
 console.log("✅ Ingressos criados");
@@ -200,7 +207,7 @@ console.log("✅ Ingressos criados");
           const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
 
           const lancheInfo = lanchesDisponiveis.find(l => 
-          l.nome && nomeLanche.toLowerCase().includes(l.nome.toLowerCase())
+          l.nome.toLowerCase().trim() === nomeLanche.toLowerCase().trim()
           );
 
           if (!lancheInfo) {
