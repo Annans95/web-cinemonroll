@@ -15,7 +15,7 @@
 */
 // Endpoint correto para enviar um pedido/venda ao back-end
 const BASE_URL = "https://apisistemaingresso-production.up.railway.app"
-const API_Cliente = `${BASE_URL}/cliente`;
+const API_URL = `${BASE_URL}/cliente`;
 const API_Filme = `${BASE_URL}/filme`;
 const API_Sala = `${BASE_URL}/sala`;
 const API_Sessao = `${BASE_URL}/sessao`;
