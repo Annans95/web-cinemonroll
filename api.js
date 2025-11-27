@@ -193,51 +193,50 @@ for (let i = 0; i < dadosCompra.assentos.length; i++) {
 
 console.log("✅ Ingressos criados");
 
-    // 6️⃣ Criar lanches dinamicamente
-    if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
-      console.log("🍿 Processando lanches...");
-      
-      const resLanches = await fetch(API_Lanche);
-      if (!resLanches.ok) {
+// 6️⃣ Criar lanches dinamicamente usando cd_lanche
+if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
+    console.log("🍿 Processando lanches...");
+
+    const resLanches = await fetch(API_Lanche);
+    if (!resLanches.ok) {
         console.warn("⚠️ Não foi possível buscar lanches");
-      } else {
+    } else {
         const lanchesDisponiveis = await resLanches.json();
         const lanchesArray = dadosCompra.lanches.split(",").map(l => l.trim());
 
         for (const lancheStr of lanchesArray) {
-          // Extrai quantidade do formato "Nome (x3)"
-          const qtdMatch = lancheStr.match(/\(x(\d+)\)/);
-          const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 1;
-          const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
+            const qtdMatch = lancheStr.match(/\(x(\d+)\)/);
+            const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 1;
+            const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
 
-          const lancheInfo = lanchesDisponiveis.find(l => 
-          l.nome.toLowerCase().trim() === nomeLanche.toLowerCase().trim()
-          );
+            const lancheInfo = lanchesDisponiveis.find(l =>
+                l.nome.toLowerCase().trim() === nomeLanche.toLowerCase().trim()
+            );
 
-          if (!lancheInfo) {
-            console.warn(`⚠️ Lanche não encontrado: ${nomeLanche}`);
-            continue;
-          }
+            if (!lancheInfo) {
+                console.warn(`⚠️ Lanche não encontrado: ${nomeLanche}`);
+                continue;
+            }
 
-          const vendaLanchePayload = {
-            nr_recibo,
-            cd_lanche: lancheInfo.cd_lanche,
-            quantidade,
-            valor_parcial: quantidade * Number(lancheInfo.valor)
-          };
+            const vendaLanchePayload = {
+                nr_recibo,
+                cd_lanche: lancheInfo.cd_lanche,
+                quantidade,
+                valor_parcial: quantidade * Number(lancheInfo.valor)
+            };
 
-          console.log("🍿 Criando venda-lanche:", vendaLanchePayload);
+            console.log("🍿 Criando venda-lanche:", vendaLanchePayload);
 
-          await fetch(API_VendaLanche, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(vendaLanchePayload)
-          });
+            await fetch(API_VendaLanche, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(vendaLanchePayload)
+            });
         }
 
         console.log("✅ Lanches criados");
-      }
     }
+}
 
     // 7️⃣ Recalcular total da venda
     console.log("🔄 Recalculando total...");
