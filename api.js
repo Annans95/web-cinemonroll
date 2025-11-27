@@ -120,24 +120,49 @@ async function enviarPedido(dadosCompra) {
 const valorPorAssento = dadosCompra.total / dadosCompra.quantidadeAssentos;
 
 for (let i = 0; i < dadosCompra.assentos.length; i++) {
-    const assentoNumero = dadosCompra.assentos[i];
+    const assentoNumero = dadosCompra.assentos[i]; // ex: "A1"
     const tipoIngresso = dadosCompra.tiposIngresso?.[i] || "inteira";
 
-    // 🔹 Buscar cd_assento no banco pelo número do assento e sessão
-    const assentoRecord = await fetch(`${API_Assento}/sessao/${sessaoSelecionada.cd_sessao}`)
-        .then(res => res.json())
-        .then(assentosSessao => assentosSessao.find(a => a.numero_assento === assentoNumero));
+    // 🔹 Se o assento já existir no banco, pega o cd_assento, senão cria um novo assento
+    let cd_assento;
 
-    if (!assentoRecord) {
-        console.error(`❌ Assento ${assentoNumero} não encontrado na sessão.`);
-        continue; // pula para o próximo assento
+    const assentosSessao = await fetch(`${API_Assento}/sessao/${sessaoSelecionada.cd_sessao}`)
+        .then(res => res.json())
+        .catch(() => []);
+
+    const assentoExistente = assentosSessao.find(a => a.numero_assento === assentoNumero);
+
+    if (assentoExistente) {
+        cd_assento = assentoExistente.cd_assento;
+    } else {
+        // Criar novo assento no banco para esta sessão
+        const novoAssentoPayload = {
+            numero_assento: assentoNumero,
+            cd_sessao: sessaoSelecionada.cd_sessao,
+            ocupado: false
+        };
+
+        const resNovoAssento = await fetch(API_Assento, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(novoAssentoPayload)
+        });
+
+        if (!resNovoAssento.ok) {
+            console.error(`❌ Erro ao criar assento ${assentoNumero}`);
+            continue; // pula para o próximo assento
+        }
+
+        const novoAssentoCriado = await resNovoAssento.json();
+        cd_assento = novoAssentoCriado.cd_assento;
     }
 
+    // 🔹 Criar ingresso
     const ingressoPayload = {
         nr_recibo,
         cd_sessao: sessaoSelecionada.cd_sessao,
-        cd_assento: assentoRecord.cd_assento,       // ID correto do banco
-        tp_ingresso: tipoIngresso.slice(0,10),     // garante CHAR(10)
+        cd_assento,
+        tp_ingresso: tipoIngresso.slice(0, 10), // garante CHAR(10)
         valor_ingresso: Number(valorPorAssento.toFixed(2))
     };
 
@@ -175,7 +200,7 @@ console.log("✅ Ingressos criados");
           const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
 
           const lancheInfo = lanchesDisponiveis.find(l => 
-            l.nome && nomeLanche.includes(l.nome)
+          l.nome && nomeLanche.toLowerCase().includes(l.nome.toLowerCase())
           );
 
           if (!lancheInfo) {
