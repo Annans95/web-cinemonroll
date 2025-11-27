@@ -461,7 +461,8 @@ function mapFilme(titulo) {
         const assentosIds = Array.from(selectedSeats).map(seat => seat.dataset.id);
 
         const dados = {
-          cliente: name,
+          cd_cliente: 1, // valor fixo temporário
+          nome: name,
           email: email,
           cpf: cpf,
           sessao: sessionTypeLabel,
