@@ -205,12 +205,17 @@ if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
         const lanchesArray = dadosCompra.lanches.split(",").map(l => l.trim());
 
         for (const lancheStr of lanchesArray) {
+            if (!lancheStr) continue; // pula strings vazias
+
+            // Extrai quantidade do formato "Nome (x3)"
             const qtdMatch = lancheStr.match(/\(x(\d+)\)/);
             const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 1;
             const nomeLanche = lancheStr.replace(/\(x\d+\).*/, "").trim();
 
+            if (!nomeLanche) continue; // pula se o nome ficou vazio
+
             const lancheInfo = lanchesDisponiveis.find(l =>
-                l.nome.toLowerCase().trim() === nomeLanche.toLowerCase().trim()
+                l.nome && l.nome.toLowerCase().trim() === nomeLanche.toLowerCase()
             );
 
             if (!lancheInfo) {
@@ -233,21 +238,19 @@ if (dadosCompra.lanches && dadosCompra.lanches !== "Nenhum") {
                 body: JSON.stringify(vendaLanchePayload)
             });
         }
-
-        console.log("✅ Lanches criados");
     }
 }
 
-    // 7️⃣ Recalcular total da venda
-    console.log("🔄 Recalculando total...");
-    await fetch(`${API_Venda}/recalcular/${nr_recibo}`, { method: "PUT" });
+// 7️⃣ Recalcular total da venda (sempre recalcula, tenha ou não lanches)
+console.log("🔄 Recalculando total...");
+await fetch(`${API_Venda}/recalcular/${nr_recibo}`, { method: "PUT" });
 
-    console.log("✅ Pedido finalizado com sucesso!", { nr_recibo });
-    return { venda: vendaCriada, nr_recibo };
+console.log("✅ Pedido finalizado com sucesso!", { nr_recibo });
+return { venda: vendaCriada, nr_recibo };
 
-  } catch (erro) {
+} catch (erro) {
     console.error("❌ Falha ao conectar com o servidor:", erro);
     alert("Erro de conexão com o servidor. Verifique se o back-end está rodando.");
     return null;
-  }
 }
+} 
