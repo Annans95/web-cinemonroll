@@ -31,13 +31,13 @@ buyButtons.forEach(btn => {
 function mapFilme(titulo) {
   const mapa = {
     "Vingadores: Ultimato": 1,
-    "Coringa": 2,
-    "Homem-Aranha no Aranhaverso": 3,
-    "Frozen II": 4,
-    "Avatar: O Caminho da Água": 5,
-    "The Batman": 6,
-    "Barbie": 7,
-    "Oppenheimer": 8
+    "The Batman": 2,
+    "Oppenheimer": 3,
+    "Avatar: O Caminho da Água": 4,
+    "Coringa": 5,
+    "Homem-Aranha no Aranhaverso": 6,
+    "Frozen II": 7,
+    "Barbie": 8
   };
   return mapa[titulo] || null;
 }
@@ -194,20 +194,90 @@ function mapTipoSessao(tipoSessao) {
     const cols = 8;
     const rowLetters = ["A", "B", "C", "D", "E"];
 
-    // criar assentos por fileira (A1..A8, B1..B8, ...)
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
+    // criar assentos por fileira INVERTIDA (E8..E1, D8..D1, ..., A8..A1)
+    // Inverte a ordem das fileiras (E->D->C->B->A) e das colunas (8->1)
+    for (let r = rows - 1; r >= 0; r--) {
+      for (let c = cols - 1; c >= 0; c--) {
         const seat = document.createElement("div");
         seat.classList.add("seat");
         const label = `${rowLetters[r]}${c + 1}`;
-        // armazenamos o rótulo legível (ex: A1) em data-id para uso posterior
+        
+        // Marcar assentos especiais
+        if (label === "C1") {
+          seat.classList.add("special-mr");
+          seat.textContent = "MR";
+          seat.title = "Assento para Mobilidade Reduzida";
+          seat.dataset.special = "mr";
+        } else if (label === "E8") {
+          seat.classList.add("special-ob");
+          seat.textContent = "OB";
+          seat.title = "Assento para Obeso";
+          seat.dataset.special = "ob";
+        } else {
+          seat.textContent = label;
+          seat.title = `Assento ${label}`;
+        }
+        
         seat.dataset.id = label;
-        // mostrar o rótulo visível no próprio elemento
-        seat.textContent = label;
-        seat.title = `Assento ${label}`;
         seatsContainer.appendChild(seat);
       }
     }
+
+    // Adicionar elemento de tela ABAIXO da linha A (após o container de assentos)
+    const screenDiv = document.createElement("div");
+    screenDiv.className = "screen";
+    screenDiv.textContent = "TELA";
+    screenDiv.style.cssText = `
+      width: 60%;
+      max-width: 550px;
+      height: 18px;
+      background: linear-gradient(to bottom, #fff, #ccc);
+      border-radius: 50% 50% 0 0;
+      margin: 15px auto 0;
+      box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+      text-align: center;
+      color: #555;
+      font-size: 14px;
+      line-height: 18px;
+      font-weight: bold;
+      display: block;
+    `;
+    seatsContainer.insertAdjacentElement('afterend', screenDiv);
+
+    // Adicionar legenda abaixo da tela
+    const legendDiv = document.createElement("div");
+    legendDiv.className = "seat-legend";
+    legendDiv.style.cssText = `
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 20px auto;
+      font-size: 13px;
+      flex-wrap: wrap;
+    `;
+    legendDiv.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 20px; height: 20px; background: #333; border-radius: 4px;"></div>
+        <span>Disponível</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 20px; height: 20px; background: #ff6f61; border-radius: 4px;"></div>
+        <span>Selecionado</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 20px; height: 20px; background: #666; border-radius: 4px;"></div>
+        <span>Ocupado</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 20px; height: 20px; background: #4a90e2; border-radius: 4px; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">MR</div>
+        <span>Mobilidade Reduzida</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 20px; height: 20px; background: #9b59b6; border-radius: 4px; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">OB</div>
+        <span>Obeso</span>
+      </div>
+    `;
+    screenDiv.insertAdjacentElement('afterend', legendDiv);
 
   // NÃO carrega assentos automaticamente - aguarda usuário escolher horário
 
