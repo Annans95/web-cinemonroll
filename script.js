@@ -415,17 +415,38 @@ function mapTipoSessao(tipoSessao) {
         return;
       }
 
-      // preço base por assento (antes de aplicar multiplicador de sessão)
-      let basePrice = 20;
+      // Preços base por tipo de ingresso
+      const ticketPrices = {
+        inteira: 20,
+        "meia-estudante": 10,
+        "meia-senior": 10,
+        "meia-pcd": 10,
+        "meia-acomp-pcd": 10,
+        "meia-prof": 10,
+        "meia-outras": 10
+      };
 
-      // aplica acréscimos por tipo de sessão — usamos a parte antes do '-' (ex: '3D' de '3D-dub')
-      const baseSession = sessionValue.split('-')[0];
-      if (baseSession === "3D") basePrice *= 1.12;
-      else if (baseSession === "IMAX") basePrice *= 1.25;
+      // Função que aplica multiplicador de sessão
+      const applySessionMultiplier = (basePrice) => {
+        const baseSession = sessionValue.split('-')[0];
+        if (baseSession === "3D") return Math.round(basePrice * 1.12);
+        else if (baseSession === "IMAX") return Math.round(basePrice * 1.25);
+        return basePrice;
+      };
 
-      basePrice = Math.round(basePrice);
-
-      const seatTotal = selectedSeats.length * basePrice;
+      // Calcular total de assentos com base nos tipos selecionados
+      let seatTotal = 0;
+      selectedSeats.forEach(seat => {
+        const seatNumber = seat.dataset.id;
+        const ticketSelect = document.querySelector(`.ticket-type-select[data-seat="${seatNumber}"]`);
+        const ticketType = ticketSelect ? ticketSelect.value : "inteira";
+        
+        if (ticketType && ticketPrices[ticketType]) {
+          const basePrice = ticketPrices[ticketType];
+          const finalPrice = applySessionMultiplier(basePrice);
+          seatTotal += finalPrice;
+        }
+      });
 
       // Cálculo dos snacks (simples somatório)
       const snackItemsAll = document.querySelectorAll(".item");
