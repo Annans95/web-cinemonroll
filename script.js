@@ -125,9 +125,11 @@ function mapTipoSessao(tipoSessao) {
         sessoesFiltradasPorFilmeESala.forEach(sessao => {
           const option = document.createElement("option");
           option.value = sessao.cd_sessao; // ID numérico real
-          // Formata e mostra apenas o horário do banco de dados
-          const dataHora = new Date(sessao.data_hora);
-          const horario = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          // Extrair horário diretamente da string do banco (evita problema de timezone)
+          // data_hora vem no formato ISO: "2024-11-28T14:00:00.000Z"
+          const dataHoraStr = sessao.data_hora;
+          const horarioParts = dataHoraStr.match(/T(\d{2}):(\d{2})/);
+          const horario = horarioParts ? `${horarioParts[1]}:${horarioParts[2]}` : dataHoraStr;
           option.textContent = horario;
           showtimeSelect.appendChild(option);
         });
