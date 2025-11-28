@@ -384,7 +384,8 @@ function mapTipoSessao(tipoSessao) {
   if (finalizarBtn) {
     finalizarBtn.addEventListener("click", () => {
       const selectedSeats = document.querySelectorAll(".seat.selected");
-      const showtime = document.getElementById("showtime").value;
+      const showtimeSelect = document.getElementById("showtime");
+      const showtime = showtimeSelect.options[showtimeSelect.selectedIndex]?.text || "—";
       const sessionSelect = document.getElementById("session-type");
       // sessionValue = valor da option (ex: '3D-dub'), sessionTypeLabel = texto legível (ex: '3D Dublado')
       const sessionValue = sessionSelect ? sessionSelect.value : "";
@@ -405,7 +406,7 @@ function mapTipoSessao(tipoSessao) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const isValidEmail = emailRegex.test(email);
 
-      if (!name || !showtime || !sessionValue || !email || !isValidEmail || !payment || selectedSeats.length === 0) {
+      if (!name || !showtimeSelect.value || !sessionValue || !email || !isValidEmail || !payment || selectedSeats.length === 0) {
         if (!isValidEmail && email) {
           alert("⚠️ Por favor, insira um e-mail válido (exemplo: exemplo@email.com).");
         } else {
@@ -588,7 +589,8 @@ function mapTipoSessao(tipoSessao) {
   // --- Atualiza o resumo do pedido ---
   function updateSummary() {
     const selectedSeats = document.querySelectorAll(".seat.selected");
-    const showtime = document.getElementById("showtime").value || "—";
+    const showtimeSelect = document.getElementById("showtime");
+    const showtime = showtimeSelect.options[showtimeSelect.selectedIndex]?.text || "—";
     const sessionSelect = document.getElementById("session-type");
     const sessionValue = sessionSelect ? sessionSelect.value : ""; // ex: '3D-dub'
     const sessionType = sessionSelect ? sessionSelect.options[sessionSelect.selectedIndex]?.text || "—" : "—"; // ex: '3D Dublado'
@@ -667,6 +669,15 @@ function mapTipoSessao(tipoSessao) {
 
     const total = seatTotal + snackTotal;
 
+    // Verifica se a sessão é 3D ou IMAX para exibir taxa adicional
+    const baseSession = sessionValue.split('-')[0];
+    let taxaAdicional = "";
+    if (baseSession === "3D") {
+      taxaAdicional = '<div style="color:#ffa500;font-size:0.9rem;margin-top:5px;">⚠️ Taxa 3D: +12% no valor dos ingressos</div>';
+    } else if (baseSession === "IMAX") {
+      taxaAdicional = '<div style="color:#ffa500;font-size:0.9rem;margin-top:5px;">⚠️ Taxa IMAX: +25% no valor dos ingressos</div>';
+    }
+
     // Atualiza o HTML do resumo com os dados calculados
     const summary = document.getElementById("summary-content");
     if (summary) {
@@ -678,7 +689,7 @@ function mapTipoSessao(tipoSessao) {
         <b>Lanches:</b> ${snackNames}<br>
         <b>Forma de Pagamento:</b> ${payment}<br>
         <hr style="border:none;border-top:1px solid #444;margin:10px 0;">
-        <b>Total Assentos:</b> R$ ${seatTotal.toFixed(2).replace('.', ',')}<br>
+        <b>Total Assentos:</b> R$ ${seatTotal.toFixed(2).replace('.', ',')}${taxaAdicional}<br>
         <b>Total Lanches:</b> R$ ${snackTotal.toFixed(2).replace('.', ',')}<br>
         <div style="margin-top:10px;font-size:1.2rem;color:#ff4b2b;font-weight:bold;">
           Total Geral: R$ ${total.toFixed(2).replace('.', ',')}
